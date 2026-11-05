@@ -23,8 +23,14 @@ export async function POST(request: NextRequest) {
     const name = String(body.name ?? "").trim();
     const subject = String(body.subject ?? "").trim();
     if (!name || !subject) return NextResponse.json({ error: "Campaign name and subject are required." }, { status: 400 });
+    const scheduledAt = body.scheduled_at ? new Date(body.scheduled_at) : null;
+    if (body.scheduled_at && (!scheduledAt || Number.isNaN(scheduledAt.getTime()) || scheduledAt.getTime() <= Date.now())) {
+      return NextResponse.json({ error: "Choose a valid future schedule time." }, { status: 400 });
+    }
     const { data, error } = await supabase.from("campaigns").insert({
       user_id: user.id, name, subject,
+      scheduled_at: scheduledAt ? scheduledAt.toISOString() : null,
+      status: scheduledAt ? "scheduled" : "draft",
       preview_text: body.preview_text ? String(body.preview_text).slice(0, 250) : null,
       html_content: body.html_content ? String(body.html_content) : null,
       text_content: body.text_content ? String(body.text_content) : null,
