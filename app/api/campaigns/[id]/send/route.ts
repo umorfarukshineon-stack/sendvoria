@@ -32,7 +32,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const apiKey = process.env.BREVO_API_KEY;
     const fromEmail = process.env.EMAIL_FROM_ADDRESS;
     const fromName = process.env.EMAIL_FROM_NAME || "Sendvoria";
-    if (!apiKey || !fromEmail) return jsonError("Email provider is not configured. Add BREVO_API_KEY and EMAIL_FROM_ADDRESS in Render environment variables.", 503);
+    if (!apiKey || !fromEmail || !process.env.SUPABASE_SERVICE_ROLE_KEY) return jsonError("Email provider or unsubscribe service is not configured.", 503);
+    if (process.env.SENDER_DOMAIN_VERIFIED !== "true" || process.env.SENDVORIA_LIVE_SENDING_ENABLED !== "true") return jsonError("Live sending is locked. Verify your sender domain in Brevo, configure unsubscribe service, then enable sending in Render.", 403);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromEmail)) return jsonError("EMAIL_FROM_ADDRESS is invalid.", 503);
 
     const { id } = await params;
