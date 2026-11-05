@@ -87,7 +87,7 @@ export default function Home() {
     try {
       const text=await file.text();
       const lines=text.split(/\r?\n/).filter(Boolean);
-      const rows=lines.map((line,i)=>line.split(",").map(x=>x.trim().replace(/^["']|["']$/g,""))).filter(cols=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cols[0]??"") && !(lines.indexOf(cols.join(","))===0 && cols[0].toLowerCase()==="email"));
+      const rows=lines.map((line)=>line.split(",").map(x=>x.trim().replace(/^["']|["']$/g,""))).filter(cols=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cols[0]??"") && !(lines.indexOf(cols.join(","))===0 && cols[0].toLowerCase()==="email"));
       const payload=rows.map(cols=>({email:cols[0].toLowerCase(),first_name:cols[1]??"",last_name:cols[2]??"",consent_status:"confirmed",consent_source:"User-confirmed CSV import"}));
       let imported=0;
       for(let i=0;i<payload.length;i+=500) {
