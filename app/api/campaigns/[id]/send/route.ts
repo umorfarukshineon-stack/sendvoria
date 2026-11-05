@@ -59,7 +59,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .select("email").eq("user_id", user.id);
     if (suppressionError) return jsonError("Could not verify the suppression list.", 503);
     const blocked = new Set((suppressions || []).map(x => String(x.email).toLowerCase()));
-    const eligible = contacts.filter(c => !blocked.has(c.email.toLowerCase()));
+    const { data: previouslyAttempted, error: previousError } = await supabase.from("campaign_recipients")
+      .select("contact_id").eq("campaign_id", campaign.id);
+    if (previousError) return jsonError("Could not check previous campaign recipients.", 503);
+    const attemptedIds = new Set((previouslyAttempted || []).map(x => x.contact_id).filter(Boolean));
+    const eligible = contacts.filter(c => !blocked.has(c.email.toLowerCase()) && !attemptedIds.has(c.id));
     if (!eligible.length) return jsonError("All selected contacts are suppressed.", 400);
 
     const origin = request.nextUrl.origin;
