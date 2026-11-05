@@ -7,7 +7,7 @@ Sendvoria is an email-marketing workspace for managing opted-in contacts, creati
 ## Current starter release
 
 - Responsive dashboard and navigation
-- Contacts CSV import (first-column email parser, browser session only)
+- Contacts CSV import (browser session only; imported addresses default to **Pending consent**, never automatically subscribed)
 - Product link library (browser session only)
 - Campaign draft form and email preview (browser session only)
 - Automation and analytics setup placeholders
@@ -36,7 +36,7 @@ Open http://localhost:3000.
 
 ## Responsible sending
 
-Only email contacts who have explicitly opted in to receive the relevant marketing. Maintain proof of consent, include a working unsubscribe link, honor opt-outs promptly, and suppress bounced or complained addresses. Do not upload scraped or purchased lists. Sending capacity and provider pricing depend on the selected email service and its current plan.
+CSV import does not prove consent. Every imported address starts as Pending consent and must remain excluded from campaigns until explicit opt-in is verified and recorded. Only email contacts who have explicitly opted in to receive the relevant marketing. Maintain proof of consent (including source and timestamp), include a working unsubscribe link, honor opt-outs promptly, and suppress bounced or complained addresses. Do not upload scraped or purchased lists. Sending capacity and provider pricing depend on the selected email service and its current plan.
 
 ## Environment variables
 
