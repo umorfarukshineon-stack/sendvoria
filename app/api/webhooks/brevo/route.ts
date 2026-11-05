@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       const {data:campaign}=await supabase.from("campaigns").select("user_id").eq("id",recipient.campaign_id).single();
       if(!campaign) continue;
       await supabase.from("email_events").insert({user_id:campaign.user_id,campaign_id:recipient.campaign_id,contact_id:recipient.contact_id,event_type:eventType,url:event.url||null,provider_event_id:String(event.id||messageId),metadata:{provider:"brevo",event:kind}});
-      if(["delivered","bounce","complaint"].includes(eventType)) await supabase.from("campaign_recipients").update({status:eventType==="bounce"?"bounced":eventType}).eq("id",recipient.id);
+      if(["delivered","bounce","complaint"].includes(eventType)) await supabase.from("campaign_recipients").update({status:eventType==="bounce"?"bounced":eventType==="complaint"?"complained":eventType}).eq("id",recipient.id);
       if(eventType==="bounce"||eventType==="complaint"){
         const reason=eventType==="bounce"?"hard_bounce":"spam_complaint";
         await supabase.from("suppression_list").upsert({user_id:campaign.user_id,email:recipient.email,reason,source:"Brevo webhook"},{onConflict:"user_id,email"});
