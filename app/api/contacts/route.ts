@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const rows = Array.isArray(body.contacts) ? body.contacts : [body];
     if (!rows.length || rows.length > 1000) return NextResponse.json({ error: "Submit between 1 and 1,000 contacts per request." }, { status: 400 });
-    const normalized: Array<{ user_id: string; email: string; first_name: string | null; last_name: string | null; status: string; consent_status: string; consent_source: string | null; consent_at: string | null; tags: string[] }> = rows.map((row: Record<string, unknown>) => ({
+    const normalized: Array<{ user_id: string; email: string; first_name: string | null; last_name: string | null; status: string; consent_status: string; consent_source: string | null; consent_at: string | null; tags: string[] }> = rows.map((row: Record<string, unknown>): { user_id: string; email: string; first_name: string | null; last_name: string | null; status: string; consent_status: string; consent_source: string | null; consent_at: string | null; tags: string[] } => ({
       user_id: user.id,
       email: String(row.email ?? "").trim().toLowerCase(),
       first_name: row.first_name ? String(row.first_name).trim() : null,
