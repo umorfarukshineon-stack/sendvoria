@@ -48,13 +48,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const remaining = Math.max(0, dailyLimit - (sentToday || 0));
     if (!remaining) return jsonError("Daily free sending limit reached. Try again after the quota resets.", 429);
 
-    const { data: contacts, error: contactsError } = await supabase.from("contacts")
-      .select("id,email,first_name,last_name,unsubscribe_token")
-      .eq("user_id", user.id).eq("status", "subscribed").eq("consent_status", "confirmed")
-      .order("created_at", { ascending: true }).limit(Math.min(remaining, 300));
-    if (contactsError) return jsonError("Could not load eligible subscribers.", 503);
-    if (!contacts?.length) return jsonError("No confirmed, subscribed contacts are eligible for this campaign.", 400);
-
     const { data: suppressions, error: suppressionError } = await supabase.from("suppression_list")
       .select("email").eq("user_id", user.id);
     if (suppressionError) return jsonError("Could not verify the suppression list.", 503);
@@ -63,7 +56,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .select("contact_id").eq("campaign_id", campaign.id);
     if (previousError) return jsonError("Could not check previous campaign recipients.", 503);
     const attemptedIds = new Set((previouslyAttempted || []).map(x => x.contact_id).filter(Boolean));
-    const eligible = contacts.filter(c => !blocked.has(c.email.toLowerCase()) && !attemptedIds.has(c.id));
+    const eligible: Array<{id:string;email:string;first_name:string|null;last_name:string|null;unsubscribe_token:string}> = [];
+    for (let offset = 0; offset < 100000 && eligible.length < remaining; offset += 1000) {
+      const { data: page, error: contactsError } = await supabase.from("contacts")
+        .select("id,email,first_name,last_name,unsubscribe_token")
+        .eq("user_id", user.id).eq("status", "subscribed").eq("consent_status", "confirmed")
+        .order("created_at", { ascending: true }).range(offset, offset + 999);
+      if (contactsError) return jsonError("Could not load eligible subscribers.", 503);
+      if (!page?.length) break;
+      for (const contact of page) {
+        if (!blocked.has(contact.email.toLowerCase()) && !attemptedIds.has(contact.id)) {
+          eligible.push(contact);
+          if (eligible.length >= remaining) break;
+        }
+      }
+      if (page.length < 1000) break;
+    }
+    if (!eligible.length) return jsonError("No new confirmed, subscribed contacts are eligible for this campaign.", 400);
+
     if (!eligible.length) return jsonError("All selected contacts are suppressed.", 400);
 
     const origin = request.nextUrl.origin;
