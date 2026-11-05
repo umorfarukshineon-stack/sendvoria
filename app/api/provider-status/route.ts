@@ -11,14 +11,18 @@ export async function GET() {
     const sender = process.env.EMAIL_FROM_ADDRESS || "";
     const hasKey = Boolean(process.env.BREVO_API_KEY);
     const hasSender = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sender);
-    const hasServiceRole = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);\n    const domainVerified = process.env.SENDER_DOMAIN_VERIFIED === "true";\n    const liveSendingEnabled = process.env.SENDVORIA_LIVE_SENDING_ENABLED === "true";
+    const hasServiceRole = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const domainVerified = process.env.SENDER_DOMAIN_VERIFIED === "true";
+    const liveSendingEnabled = process.env.SENDVORIA_LIVE_SENDING_ENABLED === "true";
     return NextResponse.json({
       provider: "Brevo",
       apiKeyConfigured: hasKey,
       senderConfigured: hasSender,
       senderAddress: hasSender ? sender : null,
       unsubscribeServiceConfigured: hasServiceRole,
-      domainVerified,\n      liveSendingEnabled,\n      sendingReady: hasKey && hasSender && hasServiceRole && domainVerified && liveSendingEnabled,
+      domainVerified,
+      liveSendingEnabled,
+      sendingReady: hasKey && hasSender && hasServiceRole && domainVerified && liveSendingEnabled,
       dailyFreePlanLimit: 300,
       requiredEnvironmentVariables: ["BREVO_API_KEY", "EMAIL_FROM_ADDRESS", "EMAIL_FROM_NAME", "SUPABASE_SERVICE_ROLE_KEY", "SENDER_DOMAIN_VERIFIED", "SENDVORIA_LIVE_SENDING_ENABLED"],
       domainVerification: "Must be confirmed in Brevo before sending. Sendvoria cannot verify DNS records automatically."
