@@ -25,7 +25,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonError("Authentication required", 401);
 
-    if (process.env.SENDVORIA_LIVE_SENDING_ENABLED !== "true" || process.env.SENDER_DOMAIN_VERIFIED !== "true") {\n      return jsonError("Live sending is locked. Verify your sender/domain in Brevo, confirm documented opt-in for the audience, then enable SENDVORIA_LIVE_SENDING_ENABLED and SENDER_DOMAIN_VERIFIED in Render.", 423);\n    }\n\n    const apiKey = process.env.BREVO_API_KEY;
+    if (process.env.SENDVORIA_LIVE_SENDING_ENABLED !== "true" || process.env.SENDER_DOMAIN_VERIFIED !== "true") {
+      return jsonError("Live sending is locked. Verify your sender/domain in Brevo, confirm documented opt-in for the audience, then enable SENDVORIA_LIVE_SENDING_ENABLED and SENDER_DOMAIN_VERIFIED in Render.", 423);
+    }
+
+    const apiKey = process.env.BREVO_API_KEY;
     const fromEmail = process.env.EMAIL_FROM_ADDRESS;
     const fromName = process.env.EMAIL_FROM_NAME || "Sendvoria";
     if (!apiKey || !fromEmail) return jsonError("Email provider is not configured. Add BREVO_API_KEY and EMAIL_FROM_ADDRESS in Render environment variables.", 503);
