@@ -6,20 +6,33 @@ export async function GET() {
     const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({error:"Authentication required"},{status:401});
-    const { data: events, error } = await supabase.from("email_events")
-      .select("event_type,campaign_id,occurred_at").eq("user_id",user.id).limit(10000);
-    if (error) return NextResponse.json({error:error.message},{status:400});
-    const counts = {sent:0,delivered:0,open:0,click:0,bounce:0,complaint:0,unsubscribe:0};
-    for (const event of events || []) {
-      if (event.event_type in counts) counts[event.event_type as keyof typeof counts] += 1;
+    const [contacts,confirmed,products,campaigns,recipients,events,campaignRows] = await Promise.all([
+      supabase.from("contacts").select("id",{count:"exact",head:true}).eq("user_id",user.id),
+      supabase.from("contacts").select("id",{count:"exact",head:true}).eq("user_id",user.id).eq("status","subscribed").eq("consent_status","confirmed"),
+      supabase.from("products").select("id",{count:"exact",head:true}).eq("user_id",user.id).eq("is_active",true),
+      supabase.from("campaigns").select("id",{count:"exact",head:true}).eq("user_id",user.id),
+      supabase.from("campaign_recipients").select("id",{count:"exact",head:true}).eq("status","sent"),
+      supabase.from("email_events").select("event_type").eq("user_id",user.id).limit(10000),
+      supabase.from("campaigns").select("status").eq("user_id",user.id).limit(1000)
+    ]);
+    for (const result of [contacts,confirmed,products,campaigns,recipients,events,campaignRows]) {
+      if (result.error) return NextResponse.json({error:result.error.message},{status:400});
     }
-    const denominator = counts.delivered || counts.sent;
+    const eventCounts:Record<string,number> = {};
+    for (const row of events.data || []) eventCounts[row.event_type]=(eventCounts[row.event_type]||0)+1;
+    const campaignStatus:Record<string,number> = {};
+    for (const row of campaignRows.data || []) campaignStatus[row.status]=(campaignStatus[row.status]||0)+1;
     return NextResponse.json({
-      totals:counts,
-      deliveryRate:counts.sent ? Math.round(counts.delivered/counts.sent*1000)/10 : 0,
-      openRate:denominator ? Math.round(counts.open/denominator*1000)/10 : 0,
-      clickRate:denominator ? Math.round(counts.click/denominator*1000)/10 : 0,
-      note:"Metrics reflect recorded provider events. Opens may be affected by privacy protections and image proxying."
+      totals:{
+        contacts:contacts.count||0,
+        confirmedSubscribers:confirmed.count||0,
+        activeProducts:products.count||0,
+        campaigns:campaigns.count||0,
+        emailsSent:recipients.count||0
+      },
+      campaignStatus,
+      events:eventCounts,
+      note:"Metrics reflect recorded Sendvoria and provider events. Opens and clicks require provider webhooks and may be affected by email privacy protections."
     });
   } catch (error) {
     return NextResponse.json({error:error instanceof Error?error.message:"Analytics unavailable"},{status:503});
