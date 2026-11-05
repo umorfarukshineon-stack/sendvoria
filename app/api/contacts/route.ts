@@ -43,3 +43,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Contacts import failed" }, { status: 503 });
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    const body = await request.json();
+    const id = String(body.id ?? "");
+    const tags = Array.isArray(body.tags) ? body.tags.map((tag: unknown) => String(tag).trim().slice(0, 40)).filter(Boolean).slice(0, 30) : null;
+    if (!id || !tags) return NextResponse.json({ error: "Contact id and tags are required." }, { status: 400 });
+    const { data, error } = await supabase.from("contacts").update({ tags }).eq("id", id).eq("user_id", user.id).select("id,email,tags").single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ contact: data });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Contact tag update failed" }, { status: 503 });
+  }
+}
