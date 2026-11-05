@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
     const events=Array.isArray(body)?body:[body];
     let processed=0;
     for(const event of events.slice(0,500)){
-      const email=String(event.email||event.recipient||"").trim().toLowerCase();
       const messageId=String(event.messageId||event['message-id']||"");
       const kind=String(event.event||event.type||"").toLowerCase();
       const mapping:Record<string,string>={delivered:"delivered",opened:"open",open:"open",click:"click",hardbounce:"bounce",softbounce:"bounce",bounce:"bounce",spam:"complaint",complaint:"complaint",blocked:"bounce",unsubscribed:"unsubscribe"};
