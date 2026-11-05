@@ -7,6 +7,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 type Contact = { id:string; email:string; status:string; consent_status:string; tags?:string[]; first_name?:string|null; last_name?:string|null };
 type Product = { id:string; name:string; price:number|null; currency:string; external_url:string };
 type Campaign = { id:string; name:string; subject:string; status:string; created_at:string };
+type AnalyticsData = { totals?: Record<string,number>; campaignStatus?: Record<string,number>; events?: Record<string,number>; note?: string };
+type ProviderStatus = { apiKeyConfigured?:boolean; senderConfigured?:boolean; senderAddress?:string|null; unsubscribeServiceConfigured?:boolean; sendingReady?:boolean; domainVerification?:string };
 
 export default function Home() {
   const supabase = createSupabaseBrowserClient();
@@ -36,8 +38,8 @@ export default function Home() {
   const [contactSearch,setContactSearch] = useState("");
   const [contactStatus,setContactStatus] = useState("all");
   const [templatePreset,setTemplatePreset] = useState("announcement");
-  const [analytics,setAnalytics] = useState<any>(null);
-  const [providerStatus,setProviderStatus] = useState<any>(null);
+  const [analytics,setAnalytics] = useState<AnalyticsData|null>(null);
+  const [providerStatus,setProviderStatus] = useState<ProviderStatus|null>(null);
 
   useEffect(() => {
     if (!supabase) { setAuthLoading(false); return; }
