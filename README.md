@@ -2,45 +2,62 @@
 
 **Marketing meets Commerce.**
 
-Sendvoria is an email-marketing workspace for managing opted-in contacts, creating campaigns, organizing product links, and measuring engagement. Product purchases happen on the merchant's existing online store.
+Sendvoria is an email-marketing workspace for permission-based contacts, campaign drafts, product promotion and engagement reporting. Physical products stay on the merchant's external store: Sendvoria stores product details and HTTPS product links only. Customers add to cart and check out on that external store.
 
-## Current starter release
+## Current implementation
 
-- Responsive dashboard and navigation
-- Contacts CSV import (first-column email parser, browser session only)
-- Product link library (browser session only)
-- Campaign draft form and email preview (browser session only)
-- Automation and analytics setup placeholders
-- Environment-variable template for future integrations
+- Supabase Auth and server-side session handling.
+- PostgreSQL tables with owner-scoped Row Level Security.
+- Contacts CSV import with a required owner confirmation that documented opt-in exists.
+- Product link library with external HTTPS URLs.
+- Campaign drafts and scheduled-send metadata.
+- Public unsubscribe confirmation page and RFC 8058 one-click POST support.
+- Brevo webhook processing for delivery, open, click, bounce, complaint and unsubscribe events.
+- Provider webhook event deduplication when Brevo supplies an event ID.
+- Analytics and health endpoints.
 
-> This is an early frontend starter, not a production email marketing service yet. The current contact/product/campaign data is held in browser memory and is lost on refresh. No emails are sent. No payment, cart, checkout, shipping, or order processing is included.
+This is not a production-ready bulk email service. Live sending is disabled unless the owner explicitly configures the server-side gates, and it must remain disabled until the sender domain, unsubscribe flow, suppression handling, consent evidence and provider webhooks have been tested. A contact checkbox is an owner attestation; it does not independently prove how or when a person opted in.
 
-## Run locally
+## Local setup
 
 Requirements: Node.js 20.9+ and npm.
 
 ```bash
 npm install
+cp .env.example .env.local
+npm test
 npm run dev
 ```
 
 Open http://localhost:3000.
 
-## Planned integrations
+## Supabase setup
 
-1. Supabase Auth + PostgreSQL + Row Level Security for accounts, contacts, consent records, products, campaigns and suppression lists.
-2. Email provider integration (start in provider test mode; store API keys only on the server).
-3. Unsubscribe, bounce and complaint processing before production sending.
-4. Campaign scheduling, templates, personalization, tracking and analytics.
-5. Optional external-store tracking/webhooks for conversion attribution.
+1. Create a Supabase project on its free tier.
+2. Apply the SQL migrations in `supabase/migrations/` in filename order.
+3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in your local environment and deployment service.
+4. Test registration, login and owner isolation before importing real contacts.
+5. Keep `SUPABASE_SERVICE_ROLE_KEY` server-only; it is used by public unsubscribe and provider webhook routes.
+
+## Email provider setup
+
+Brevo integration is optional. Keep `BREVO_API_KEY`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME` and `BREVO_WEBHOOK_SECRET` in server-side environment variables only. Configure the webhook secret using the `x-sendvoria-webhook-secret` request header; query-string secrets are not accepted.
+
+The unsubscribe URL is sent in both the `List-Unsubscribe` and `List-Unsubscribe-Post` headers. Browser GET requests show a confirmation page; RFC 8058 POST requests unsubscribe directly without requiring a login. Hard bounces, spam complaints and explicit unsubscribes are added to the suppression list. Soft bounces are recorded but are not treated as permanent suppression.
+
+Live delivery requires both `SENDER_DOMAIN_VERIFIED=true` and `SENDVORIA_LIVE_SENDING_ENABLED=true`, as well as valid provider and unsubscribe configuration. Keep these values false until compliance and deliverability testing is complete. Never test against the full 100,000-contact audience.
 
 ## Responsible sending
 
-Only email contacts who have explicitly opted in to receive the relevant marketing. Maintain proof of consent, include a working unsubscribe link, honor opt-outs promptly, and suppress bounced or complained addresses. Do not upload scraped or purchased lists. Sending capacity and provider pricing depend on the selected email service and its current plan.
+Only email contacts with explicit, documented permission for the relevant marketing. Retain the original opt-in evidence, source and timestamp; honor opt-outs promptly; and suppress hard bounces and complaints. Do not upload scraped or purchased lists. Stored contacts do not imply free sending capacity: provider limits and pricing vary by plan.
 
-## Environment variables
+## Commerce boundary
 
-Copy `.env.example` to `.env.local` when integrations are added. Never commit real API keys, service-role keys, passwords, or customer data.
+Sendvoria does not implement carts, checkout, payments, shipping or order fulfillment. Product calls to action link to the merchant's external product/store page.
+
+## Secrets and customer data
+
+Never commit API keys, service-role keys, passwords, access tokens or customer email lists. Use deployment environment settings for secrets. The repository is public, so keep production data out of Git.
 
 ## License
 
