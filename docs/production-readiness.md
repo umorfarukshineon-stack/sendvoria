@@ -32,7 +32,7 @@ Do not expose a Supabase service-role key to browser code.
 ## Setup sequence
 
 1. Create a Supabase project on its free tier and copy its project URL and anon/publishable key.
-2. Run every SQL file in `supabase/migrations/` in filename order, including `202611050001_initial_platform.sql` and `202611060001_webhook_event_idempotency.sql`.
+2. Run every SQL file in `supabase/migrations/` in filename order, including `202611050001_initial_platform.sql` and `20261106080954_webhook_event_idempotency.sql`.
 3. Add the Supabase URL and anon key to the deployment environment; add the service-role key only as a server-side secret.
 4. Redeploy and test registration, login and row-level security with separate test accounts before importing customer data.
 5. If using Brevo, configure the webhook with the custom `x-sendvoria-webhook-secret` header and verify delivery, open, click, hard-bounce, complaint and unsubscribe events.
