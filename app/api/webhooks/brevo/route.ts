@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
       const providerEventId = event.id === undefined || event.id === null || event.id === ""
         ? null
         : String(event.id);
+      const providerEventFingerprint = providerEventId ? `brevo:${providerEventId}` : null;
       const { error: eventError } = await supabase.from("email_events").upsert({
         user_id: campaign.user_id,
         campaign_id: recipient.campaign_id,
@@ -87,9 +88,10 @@ export async function POST(request: NextRequest) {
         event_type: eventType,
         url: typeof event.url === "string" ? event.url : null,
         provider_event_id: providerEventId,
+        provider_event_fingerprint: providerEventFingerprint,
         metadata: { provider: "brevo", event: kind }
       }, {
-        onConflict: "user_id,provider_event_id,event_type",
+        onConflict: "user_id,provider_event_fingerprint",
         ignoreDuplicates: true
       });
       if (eventError) throw eventError;
