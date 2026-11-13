@@ -16,6 +16,8 @@ test("creates an owner-scoped consent audit table with RLS", () => {
 
 test("keeps audit events append-only for application roles", () => {
   assert.match(migration, /before update or delete on public\.contact_consent_events/i);
+  assert.match(migration, /pg_trigger_depth\(\) > 1/i);
+  assert.match(migration, /to_jsonb\(old\) - 'contact_id'/i);
   assert.match(migration, /revoke all on public\.contact_consent_events from anon, authenticated/i);
   assert.doesNotMatch(migration, /create policy[^;]+for (insert|update|delete|all)/i);
 });
