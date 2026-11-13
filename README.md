@@ -35,7 +35,7 @@ Open http://localhost:3000.
 ## Supabase setup
 
 1. Create a Supabase project on its free tier.
-2. Apply the SQL migrations in `supabase/migrations/` in filename order, including `202611130001_consent_audit_trail.sql`.
+2. Apply the tracked SQL migrations in `supabase/migrations/` in filename order, including the append-only consent audit migration.
 3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in your local environment and deployment service.
 4. Test registration, login and owner isolation before importing real contacts.
 5. Keep `SUPABASE_SERVICE_ROLE_KEY` server-only; it is used by public unsubscribe and provider webhook routes.
