@@ -43,3 +43,14 @@ const searchPathMigration = readFileSync(
 test("pins the immutable audit trigger function to an empty search path", () => {
   assert.ok(searchPathMigration.includes("alter function public.prevent_contact_consent_event_mutation() set search_path = '';"));
 });
+
+const optimizationMigration = readFileSync(
+  new URL("../supabase/migrations/20261113090248_optimize_contact_consent_audit_indexes_and_rls.sql", import.meta.url),
+  "utf8"
+);
+
+test("uses an initplan-friendly owner policy and indexes audit foreign keys", () => {
+  assert.ok(optimizationMigration.includes("using ((select auth.uid()) = user_id)"));
+  assert.ok(optimizationMigration.includes("contact_consent_events_contact_id_idx"));
+  assert.ok(optimizationMigration.includes("contact_consent_events_actor_user_id_idx"));
+});
