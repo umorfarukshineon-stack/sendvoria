@@ -70,7 +70,13 @@ export async function POST(request: NextRequest) {
     if (lookupError || !contact) return page("This unsubscribe link is invalid or has expired.", "", false);
 
     const { error: updateError } = await supabase.from("contacts")
-      .update({ status: "unsubscribed", consent_status: "withdrawn" })
+      .update({
+        status: "unsubscribed",
+        consent_status: "withdrawn",
+        status_source: "Sendvoria one-click unsubscribe",
+        status_provider: "sendvoria",
+        status_provider_event_id: null
+      })
       .eq("id", contact.id)
       .eq("user_id", contact.user_id);
     if (updateError) throw updateError;

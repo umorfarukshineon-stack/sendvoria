@@ -125,8 +125,17 @@ export async function POST(request: NextRequest) {
         if (suppressionError) throw suppressionError;
 
         if (recipient.contact_id) {
-          const contactUpdate: { status: string; consent_status?: string } = {
-            status: eventType === "unsubscribe" ? "unsubscribed" : eventType === "complaint" ? "complained" : "bounced"
+          const contactUpdate: {
+            status: string;
+            consent_status?: string;
+            status_source: string;
+            status_provider: string;
+            status_provider_event_id: string | null;
+          } = {
+            status: eventType === "unsubscribe" ? "unsubscribed" : eventType === "complaint" ? "complained" : "bounced",
+            status_source: "Brevo webhook: " + kind,
+            status_provider: "brevo",
+            status_provider_event_id: providerEventId
           };
           // Preserve the historical consent confirmation for bounces/complaints;
           // only an explicit unsubscribe withdraws consent.

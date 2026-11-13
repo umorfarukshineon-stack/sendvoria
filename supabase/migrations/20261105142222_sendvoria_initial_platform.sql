@@ -162,14 +162,5 @@ create policy "campaign recipients owner access" on public.campaign_recipients f
   using (exists (select 1 from public.campaigns c where c.id = campaign_id and c.user_id = auth.uid()))
   with check (exists (select 1 from public.campaigns c where c.id = campaign_id and c.user_id = auth.uid()));
 
--- Create a profile automatically when a new Supabase Auth user registers.
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  insert into public.profiles(id, full_name) values (new.id, coalesce(new.raw_user_meta_data->>'full_name',''));
-  return new;
-end;
-$$;
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created after insert on auth.users
-for each row execute procedure public.handle_new_user();
+
+-- Profile rows are created by the authenticated application layer; no public SECURITY DEFINER trigger.

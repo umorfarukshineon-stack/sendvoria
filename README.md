@@ -8,7 +8,8 @@ Sendvoria is an email-marketing workspace for permission-based contacts, campaig
 
 - Supabase Auth and server-side session handling.
 - PostgreSQL tables with owner-scoped Row Level Security.
-- Contacts CSV import with a required owner confirmation that documented opt-in exists.
+- Contacts CSV import with owner attestation, original opt-in source and optional evidence/timestamp fields.
+- Append-only consent audit history for opt-in confirmation, withdrawal, hard bounce and spam complaint events.
 - Product link library with external HTTPS URLs.
 - Campaign drafts and scheduled-send metadata.
 - Public unsubscribe confirmation page and RFC 8058 one-click POST support.
@@ -34,7 +35,7 @@ Open http://localhost:3000.
 ## Supabase setup
 
 1. Create a Supabase project on its free tier.
-2. Apply the SQL migrations in `supabase/migrations/` in filename order.
+2. Apply the tracked SQL migrations in `supabase/migrations/` in filename order, including the append-only consent audit migration.
 3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in your local environment and deployment service.
 4. Test registration, login and owner isolation before importing real contacts.
 5. Keep `SUPABASE_SERVICE_ROLE_KEY` server-only; it is used by public unsubscribe and provider webhook routes.
