@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const migration = readFileSync(
-  new URL("../supabase/migrations/202611130001_consent_audit_trail.sql", import.meta.url),
+  new URL("../supabase/migrations/20261113085402_contact_consent_audit_trail.sql", import.meta.url),
   "utf8"
 );
 
@@ -33,4 +33,13 @@ test("records opt-in, withdrawal, hard-bounce and complaint transitions", () => 
   assert.match(migration, /auth\.uid\(\)/i);
   assert.match(migration, /on conflict \(user_id, provider, provider_event_id\) do nothing/i);
   assert.match(migration, /old\.status is distinct from 'unsubscribed'\s+or old\.consent_status is distinct from 'withdrawn'/i);
+});
+
+const searchPathMigration = readFileSync(
+  new URL("../supabase/migrations/20261113090047_fix_contact_consent_audit_function_search_path.sql", import.meta.url),
+  "utf8"
+);
+
+test("pins the immutable audit trigger function to an empty search path", () => {
+  assert.match(searchPathMigration, /alter function public\\.prevent_contact_consent_event_mutation\\(\\) set search_path = ''/i);
 });
