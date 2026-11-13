@@ -60,7 +60,7 @@ returns trigger
 language plpgsql
 as $$
 begin
-  -- Permit only the FK's contact_id nullification and account-delete cascade.
+  -- Permit only FK nullification of contact/actor references and account-delete cascades.
   -- Direct application UPDATE/DELETE attempts remain blocked.
   if tg_op = 'UPDATE'
      and pg_trigger_depth() > 1
