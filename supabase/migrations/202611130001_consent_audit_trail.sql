@@ -64,9 +64,12 @@ begin
   -- Direct application UPDATE/DELETE attempts remain blocked.
   if tg_op = 'UPDATE'
      and pg_trigger_depth() > 1
-     and old.contact_id is not null
-     and new.contact_id is null
-     and (to_jsonb(old) - 'contact_id') = (to_jsonb(new) - 'contact_id') then
+     and (
+       (old.contact_id is not null and new.contact_id is null)
+       or (old.actor_user_id is not null and new.actor_user_id is null)
+     )
+     and (to_jsonb(old) - 'contact_id' - 'actor_user_id')
+       = (to_jsonb(new) - 'contact_id' - 'actor_user_id') then
     return new;
   end if;
 
