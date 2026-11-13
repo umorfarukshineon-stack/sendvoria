@@ -60,6 +60,20 @@ returns trigger
 language plpgsql
 as $$
 begin
+  -- Permit only the FK's contact_id nullification and account-delete cascade.
+  -- Direct application UPDATE/DELETE attempts remain blocked.
+  if tg_op = 'UPDATE'
+     and pg_trigger_depth() > 1
+     and old.contact_id is not null
+     and new.contact_id is null
+     and (to_jsonb(old) - 'contact_id') = (to_jsonb(new) - 'contact_id') then
+    return new;
+  end if;
+
+  if tg_op = 'DELETE' and pg_trigger_depth() > 1 then
+    return old;
+  end if;
+
   raise exception 'Contact consent audit events are append-only.'
     using errcode = '55000';
 end;
