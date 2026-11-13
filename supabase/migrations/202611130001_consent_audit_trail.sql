@@ -104,7 +104,7 @@ begin
      ) then
     if tg_op = 'INSERT'
        or (old.status is distinct from 'unsubscribed'
-           and old.consent_status is distinct from 'withdrawn') then
+           or old.consent_status is distinct from 'withdrawn') then
       v_event_type := 'consent_withdrawn';
     end if;
   elsif new.status = 'subscribed'
