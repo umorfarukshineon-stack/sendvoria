@@ -28,4 +28,5 @@ test("records opt-in, withdrawal, hard-bounce and complaint transitions", () => 
   assert.match(migration, /new\.consent_evidence_reference/i);
   assert.match(migration, /auth\.uid\(\)/i);
   assert.match(migration, /on conflict \(user_id, provider, provider_event_id\) do nothing/i);
+  assert.match(migration, /old\.status is distinct from 'unsubscribed'\s+or old\.consent_status is distinct from 'withdrawn'/i);
 });
