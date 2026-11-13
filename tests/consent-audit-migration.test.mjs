@@ -54,3 +54,12 @@ test("uses an initplan-friendly owner policy and indexes audit foreign keys", ()
   assert.ok(optimizationMigration.includes("contact_consent_events_contact_id_idx"));
   assert.ok(optimizationMigration.includes("contact_consent_events_actor_user_id_idx"));
 });
+
+const captureSearchPathMigration = readFileSync(
+  new URL("../supabase/migrations/20261113090348_harden_contact_consent_capture_function_search_path.sql", import.meta.url),
+  "utf8"
+);
+
+test("pins the SECURITY DEFINER consent capture function to an empty search path", () => {
+  assert.ok(captureSearchPathMigration.includes("alter function public.capture_contact_consent_event() set search_path = '';"));
+});
