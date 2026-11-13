@@ -32,7 +32,7 @@ Do not expose a Supabase service-role key to browser code.
 ## Setup sequence
 
 1. Create a Supabase project on its free tier and copy its project URL and anon/publishable key.
-2. Run every SQL file in `supabase/migrations/` in filename order. The tracked history includes `20261105142222_sendvoria_initial_platform.sql`, `20261105144759_optimize_rls_and_campaign_indexes.sql`, `20261105145356_campaign_recipient_deduplication.sql`, `20261106080954_webhook_event_idempotency.sql` and `20261113085402_contact_consent_audit_trail.sql`, followed by `20261113090047_fix_contact_consent_audit_function_search_path.sql` and `20261113090248_optimize_contact_consent_audit_indexes_and_rls.sql`.
+2. Run every SQL file in `supabase/migrations/` in filename order. The tracked history includes `20261105142222_sendvoria_initial_platform.sql`, `20261105144759_optimize_rls_and_campaign_indexes.sql`, `20261105145356_campaign_recipient_deduplication.sql`, `20261106080954_webhook_event_idempotency.sql` and `20261113085402_contact_consent_audit_trail.sql`, followed by `20261113090047_fix_contact_consent_audit_function_search_path.sql` and `20261113090248_optimize_contact_consent_audit_indexes_and_rls.sql` and `20261113090348_harden_contact_consent_capture_function_search_path.sql`.
 3. Add the Supabase URL and anon key to the deployment environment; add the service-role key only as a server-side secret.
 4. Redeploy and test registration, login and row-level security with separate test accounts before importing customer data.
 5. If using Brevo, configure the webhook with the custom `x-sendvoria-webhook-secret` header and verify delivery, open, click, hard-bounce, complaint and unsubscribe events.
