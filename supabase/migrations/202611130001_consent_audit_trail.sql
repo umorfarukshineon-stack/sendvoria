@@ -79,6 +79,7 @@ as $$
 declare
   v_event_type text;
   v_source text;
+  v_method text;
   v_provider text;
   v_provider_event_id text;
   v_previous_status text;
@@ -126,10 +127,16 @@ begin
     v_provider := 'sendvoria';
     v_provider_event_id := null;
     v_occurred_at := coalesce(new.consent_at, now());
+    v_method := coalesce(nullif(btrim(new.consent_method), ''), 'owner_attestation');
   else
     v_source := coalesce(nullif(btrim(new.status_source), ''), 'Contact status transition');
     v_provider := coalesce(nullif(btrim(new.status_provider), ''), 'sendvoria');
     v_provider_event_id := new.status_provider_event_id;
+    v_method := case
+      when v_provider = 'brevo' then 'provider_webhook'
+      when v_source = 'Sendvoria one-click unsubscribe' then 'one_click_unsubscribe'
+      else 'status_transition'
+    end;
   end if;
 
   insert into public.contact_consent_events (
@@ -155,7 +162,7 @@ begin
     new.email,
     v_event_type,
     v_source,
-    new.consent_method,
+    v_method,
     new.consent_evidence_reference,
     v_provider,
     v_provider_event_id,
