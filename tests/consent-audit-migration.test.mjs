@@ -41,5 +41,5 @@ const searchPathMigration = readFileSync(
 );
 
 test("pins the immutable audit trigger function to an empty search path", () => {
-  assert.match(searchPathMigration, /alter function public\\.prevent_contact_consent_event_mutation\\(\\) set search_path = ''/i);
+  assert.ok(searchPathMigration.includes("alter function public.prevent_contact_consent_event_mutation() set search_path = '';"));
 });
