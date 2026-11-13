@@ -13,7 +13,7 @@ Sendvoria is a marketing workspace. Physical products remain on the merchant's e
 - Analytics: sent/delivered/open/click/bounce/complaint/unsubscribe events.
 - Store attribution: optional external store order references and revenue signals.
 
-The SQL migrations create the multi-tenant schema, owner-scoped row-level security policies and provider-event deduplication index. This does not by itself prove that a deployed Supabase project has run the migrations.
+The SQL migrations create the multi-tenant schema, owner-scoped row-level security policies, provider-event deduplication and an append-only contact consent audit trail. This does not by itself prove that a deployed Supabase project has run the migrations.
 
 ## Required environment variables
 
@@ -32,7 +32,7 @@ Do not expose a Supabase service-role key to browser code.
 ## Setup sequence
 
 1. Create a Supabase project on its free tier and copy its project URL and anon/publishable key.
-2. Run every SQL file in `supabase/migrations/` in filename order, including `202611050001_initial_platform.sql` and `20261106080954_webhook_event_idempotency.sql`.
+2. Run every SQL file in `supabase/migrations/` in filename order, including `202611050001_initial_platform.sql`, `20261106080954_webhook_event_idempotency.sql` and `202611130001_consent_audit_trail.sql`.
 3. Add the Supabase URL and anon key to the deployment environment; add the service-role key only as a server-side secret.
 4. Redeploy and test registration, login and row-level security with separate test accounts before importing customer data.
 5. If using Brevo, configure the webhook with the custom `x-sendvoria-webhook-secret` header and verify delivery, open, click, hard-bounce, complaint and unsubscribe events.
@@ -45,7 +45,9 @@ Do not expose a Supabase service-role key to browser code.
 - Do not import purchased, scraped or otherwise non-consented lists.
 - Unsubscribe must work without login and must immediately suppress further marketing. The endpoint supports RFC 8058 one-click POST; test it with the actual email provider before production.
 - Hard bounces, spam complaints and explicit unsubscribes must be suppressed. Soft bounces are recorded but are not automatically treated as permanent suppression.
-- Webhook events with provider event IDs are deduplicated. Campaign-send concurrency locks, retry behavior and a full consent audit trail still require additional testing/work.
+- Webhook events with provider event IDs are deduplicated. The consent audit migration records opt-in confirmation, consent withdrawal, hard bounces and spam complaints, including source, method, evidence reference, actor/provider and before/after status. Audit rows are owner-readable and append-only; authenticated application roles cannot update or delete them.
+- CSV import requires an owner attestation and an original opt-in source. The optional `consent_at` CSV column preserves the original opt-in timestamp when supplied. If omitted, Sendvoria records the import-attestation time instead; that timestamp is not independent proof of the original opt-in. An optional `evidence_reference` column (or workspace default reference) can point to the relevant CRM/form record.
+- Authenticated contact history is available at `GET /api/contacts/{contactId}/consent-history` after the migration is applied. Campaign-send concurrency locks, safe retry behavior and end-to-end audit verification still require additional testing.
 - Do not claim revenue attribution unless an external-store integration sends verified purchase events.
 
 ## Free-tier expectations
